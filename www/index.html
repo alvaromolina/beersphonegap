@@ -34,36 +34,96 @@
         <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
         <!-- Include the jQuery Mobile library -->
         <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        
+
+        <script type="text/javascript">
 
 
+            function showBeerDetails(id){
+                $.mobile.pageContainer.pagecontainer("change", "beer.html", { id: id } );
+            }
+
+            $(document).on('pagebeforeshow', "#pageone",function () {
+                //https://jsonp.afeld.me/?callback=?&url=http%3A%2F%2Fapi.brewerydb.com%2Fv2%2Fbeers%3Fkey%3D2109c52d5c6ae137f7947e7f8f132d5c%26format%3Djson%26styleId%3D2
+
+
+                loadBeers = function(){
+                    var path = window.location.href.replace('index.html', '');
+                    //$.getJSON(path+'beers.json', function(data) {
+                    $.getJSON('https://jsonp.afeld.me/?callback=?&url=http%3A%2F%2Fapi.brewerydb.com%2Fv2%2Fbeers%3Fkey%3D2109c52d5c6ae137f7947e7f8f132d5c%26format%3Djson%26styleId%3D2', function(data) {
+
+                      var items = [];
+                      $.each(data.data, function(i, row) {
+                        $('#lista_beers').append('<li><a onclick="showBeerDetails(1);" href="#"><img src="'+(row.labels ? row.labels.medium : "") +'">' + row.name + '<br><small>'+row.abv+'%</small></a></li>');
+                      });
+                      $('#lista_beers').listview('refresh');
+                    });
+                }
+
+ 
+                /* check scroll function */
+                function checkScroll() {
+                  var activePage = $.mobile.pageContainer.pagecontainer("getActivePage"),
+                    screenHeight = $.mobile.getScreenHeight(),
+                    contentHeight = $(".ui-content", activePage).outerHeight(),
+                    header = $(".ui-header", activePage).outerHeight() - 1,
+                    scrolled = $(window).scrollTop(),
+                    footer = $(".ui-footer", activePage).outerHeight() - 1,
+                    scrollEnd = contentHeight - screenHeight + header + footer;
+                  if (activePage[0].id == "pageone" && scrolled >= scrollEnd) {
+                    console.log("aumentando...");
+                    addMore(activePage);
+                  }
+                }
+                /* add more function */
+                function addMore(page) {
+                  $(document).off("scrollstop");
+                  $.mobile.loading("show", {
+                    text: "loading more..",
+                    textVisible: true
+                  });
+                  setTimeout(function() {
+                    loadBeers();
+                    $.mobile.loading("hide");
+                    $(document).on("scrollstop", checkScroll);
+                  }, 500);
+                }
+                loadBeers();
+                /* attach if scrollstop for first time */
+                $(document).on("scrollstop", checkScroll);
+            });
+
+
+
+            $( document ).on( "pagebeforechange" , function ( event, data ) {
+                if ( data.toPage[0].id == "pagetwo" ) {
+                    var id = data.options.id;
+                    $('#hello').html("cahu!");
+
+                }
+            });
+
+
+        </script>
     </head>
     <body>
         <div data-role="page" id="pageone">
-          <div data-role="main" class="ui-content">
-          <h2>My Phonebook</h2>
-          <ul data-role="listview" data-autodividers="true" data-inset="true">
-            <li><a href="#">Adele</a></li>
-            <li><a href="#">Agnes</a></li>
-            <li><a href="#">Albert</a></li>
-            <li><a href="#">Billy</a></li>
-            <li><a href="#">Bob</a></li>
-            <li><a href="#">Calvin</a></li>
-            <li><a href="#">Cameron</a></li>
-            <li><a href="#">Chloe</a></li>
-            <li><a href="#">Christina</a></li>
-            <li><a href="#">Diana</a></li>
-            <li><a href="#">Gabriel</a></li>
-            <li><a href="#">Glen</a></li>
-            <li><a href="#">Ralph</a></li>
-            <li><a href="#">Valarie</a></li>
-          </ul>
-        
-          </div>
+
+            <div data-role="header" data-position="fixed" data-tap-toggle="false">
+                <h1>My beers!</h1>
+            </div>
+
+            <div role="main" class="ui-content">
+            <h2>Cervezas del mundo</h2>
+            <ul data-role="listview" data-autodividers="true" data-inset="true" data-filter="true" id="lista_beers">
+            </ul>
+            </div>
+            <div data-role="footer" data-position="fixed" data-tap-toggle="false">
+                 <h1>Coyright @AMC</h1>
+            </div>
+
         </div> 
-        <script type="text/javascript" src="cordova.js"></script>
+        <!--<script type="text/javascript" src="cordova.js"></script>-->
         <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-            //app.initialize();
-        </script>
     </body>
 </html>
